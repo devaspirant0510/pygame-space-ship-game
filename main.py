@@ -88,8 +88,9 @@ last_score_update = pygame.time.get_ticks()
 game_score = 0
 
 game_state_start = 1
-game_state_main = 2
-game_state_game_over = 3
+game_select_screen = 2
+game_state_main = 3
+game_state_game_over = 4
 
 is_shot = False
 
@@ -190,11 +191,15 @@ while running:
         else:
             if event.type == pygame.KEYDOWN:
                 game_state = game_state_start
+    if game_state == game_select_screen:
+        pass
     if game_state == game_state_start:
         game_score = 0
         game_over_message = font.render(f"press any key to start", True, (255, 255, 255))
         screen.blit(start_screen_img, (0, 0))
         screen.blit(game_over_message, (0, 0))
+    elif game_select_screen:
+        pass
     elif game_state == game_state_main:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:

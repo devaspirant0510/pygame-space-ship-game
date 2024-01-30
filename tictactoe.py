@@ -1,74 +1,219 @@
 import pygame
-import sys
+import random
 
-# 초기화
+# 게임 설정
+board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+game_running = True
+user_turn = True
+win_count = 0
+lose_count = 0
+draw_count = 0
+size = 256
+title_height = 120
+footer_height = 130
+bot_delay = random.randint(700, 1000)  # 봇이 말을 놓는 딜레이 시간 (밀리초)
+tile_size = 200
+image_o = pygame.image.load("../img/o.png")
+image_o = pygame.transform.scale(image_o, (tile_size * 0.87, tile_size * 0.83))
+
+image_x = pygame.image.load("../img/crossed.png")
+image_x = pygame.transform.scale(image_x, (tile_size, tile_size))
+
+# 파이게임 초기화
 pygame.init()
+screen = pygame.display.set_mode((tile_size * 3, tile_size * 3 + title_height + footer_height))
+pygame.display.set_caption("틱택토")
+icon = pygame.image.load("../img/tic-tac-toe.png")
+pygame.display.set_icon(icon)
 
-# 화면 설정
-width, height = 600, 600
-screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("틱택토 게임")
+print(pygame.font.get_fonts())
+# 텍스트 출력을 위한 폰트 설정
+font = pygame.font.SysFont("consolas", 30)
+font50 = pygame.font.SysFont("consolas", 40)
+font80 = pygame.font.SysFont("consolas", 60)
+font100 = pygame.font.SysFont("consolas", 80)
+# 사용자 정의 이벤트 생성
+BOT_PLAY = pygame.USEREVENT + 1
+first_turn = True
+game_end = False
 
-# 색깔 정의
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-LINE_COLOR = (0, 0, 0)
 
-# 게임 보드 초기화
-board = [['' for _ in range(3)] for _ in range(3)]
+def evaluate(board):
+    for i in range(3):
+        if board[i * 3] == board[i * 3 + 1] == board[i * 3 + 2] != 0:
+            return board[i * 3]
+        if board[i] == board[i + 3] == board[i + 6] != 0:
+            return board[i]
+    if board[0] == board[4] == board[8] != 0 or board[2] == board[4] == board[6] != 0:
+        return board[4]
+    if 0 not in board:
+        return 0
+    return None  # 게임이 아직 진행 중인 경우
 
-# 현재 차례 설정
-current_player = 'X'
 
-# 게임 루프
-while True:
+def minimax(board, depth, is_maximizing):
+    result = evaluate(board)
+    if result is not None:
+        if result == 1:
+            return -1
+        elif result == -1:
+            return 1
+        else:
+            return 0
+
+    if is_maximizing:
+        best_score = -float('inf')
+        for i in range(9):
+            if board[i] == 0:
+                board[i] = -1
+                score = minimax(board, depth + 1, False)
+                board[i] = 0
+                best_score = max(score, best_score)
+        return best_score
+    else:
+        best_score = float('inf')
+        for i in range(9):
+            if board[i] == 0:
+                board[i] = 1
+                score = minimax(board, depth + 1, True)
+                board[i] = 0
+                best_score = min(score, best_score)
+        return best_score
+
+
+def draw_board():
+    screen.fill((255, 255, 255))  # 화면을 흰색으로 채우기
+    # 상단의 승/패 표시 텍스트
+    player_info = font.render("player", True, (0, 0, 0))
+    player_count = font100.render(f"{win_count}", True, (0, 0, 0))
+    screen.blit(player_info, (tile_size // 2 - player_info.get_width() // 2, 5 + title_height + tile_size * 3))
+    screen.blit(player_count, (
+        tile_size // 2 - player_count.get_width() // 2, title_height + tile_size * 3 + 30))
+    draw_info = font.render("draw", True, (0, 0, 0))
+    tie_count = font100.render(f"{draw_count}", True, (0, 0, 0))
+    screen.blit(draw_info, (tile_size + tile_size // 2 - draw_info.get_width() // 2, 5 + title_height + tile_size * 3))
+    screen.blit(tie_count, (tile_size + tile_size // 2 - tie_count.get_width() // 2,
+                            title_height + tile_size * 3 + 30))
+    com_info = font.render("com", True, (0, 0, 0))
+    com_win_count = font100.render(f"{lose_count}", True, (0, 0, 0))
+    screen.blit(com_info,
+                (tile_size * 2 + tile_size // 2 - com_info.get_width() // 2, 5 + title_height + tile_size * 3))
+    screen.blit(com_win_count,
+                (tile_size * 2 + tile_size // 2 - com_win_count.get_width() // 2,
+                 30 + title_height + tile_size * 3))
+    # text = font.render(f"win: {win_count}, lose: {lose_count} draw :{draw_count}", True, (0, 0, 0))
+    # screen.blit(text, (10, 50 + tile_size * 3 + 10))
+    turn = font80.render("Tic Tac Toe", True, (30, 200, 200))
+    if user_turn:
+        is_player_turn = font.render("player Turn", True, (30, 30, 30))
+        resize_turn_icon = pygame.transform.scale(image_x,
+                                                  (is_player_turn.get_height(), is_player_turn.get_height()))
+
+    else:
+        is_player_turn = font.render("com Turn", True, (30, 30, 30))
+        resize_turn_icon = pygame.transform.scale(image_o,
+                                                  (is_player_turn.get_height(), is_player_turn.get_height()))
+
+    # if user_turn:
+    #     turn = font.render("turn : you", True, (0, 0, 0))
+    # else:
+    #     turn = font.render("turn : com", True, (0, 0, 0))
+    screen.blit(turn, (tile_size * 3 // 2 - turn.get_width() // 2, 10))
+    screen.blit(is_player_turn, (tile_size * 3 // 2 - is_player_turn.get_width() // 2, 10 + turn.get_height() + 5))
+    screen.blit(resize_turn_icon, (
+        tile_size * 3 // 2 - is_player_turn.get_width() // 2 - resize_turn_icon.get_width() - 6,
+        10 + turn.get_height() + 5))
+
+    # 게임 보드 그리기
+    for i in range(3):
+        for j in range(3):
+            pygame.draw.rect(screen, (100, 100, 100),
+                             pygame.Rect(j * tile_size, i * tile_size + title_height, tile_size, tile_size), 3,
+                             border_radius=3)
+            if board[i * 3 + j] != 0:
+                if board[i * 3 + j] == 1:
+                    screen.blit(image_x, (j * tile_size, i * tile_size + title_height))
+                else:
+                    screen.blit(image_o, (j * tile_size + ((tile_size - image_o.get_width()) // 2),
+                                          (i * tile_size + ((tile_size - image_o.get_height()) // 2)) + title_height))
+
+
+def check_win():
+    # 가로, 세로, 대각선 방향으로 승리 조건 확인
+    for i in range(3):
+        if board[i * 3] == board[i * 3 + 1] == board[i * 3 + 2] != 0:
+            return board[i * 3]
+        if board[i] == board[i + 3] == board[i + 6] != 0:
+            return board[i]
+    if board[0] == board[4] == board[8] != 0 or board[2] == board[4] == board[6] != 0:
+        return board[4]
+    # 보드가 다 찼는지 확인
+    if 0 not in board:
+        return 999  # 무승부
+    return 0  # 게임 진행 중
+
+
+while game_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouseX, mouseY = event.pos
-            clicked_row = mouseY // (height // 3)
-            clicked_col = mouseX // (width // 3)
+            game_running = False
+        if event.type == pygame.MOUSEBUTTONDOWN and user_turn and not game_end:
+            x, y = event.pos
+            if title_height < y < title_height + tile_size * 3:
+                index = (y - title_height) // tile_size * 3 + x // tile_size
+                print(x, y, index)
+                if board[index] == 0:
+                    board[index] = 1
+                    user_turn = False
+                    pygame.time.set_timer(BOT_PLAY, bot_delay)  # 봇 플레이 이벤트 설정
+        if event.type == BOT_PLAY:
+            pygame.time.set_timer(BOT_PLAY, 0)
+            best_score = -float('inf')
+            move = None
+            for i in range(9):
+                if board[i] == 0:
+                    board[i] = -1
+                    score = minimax(board, 0, False)
+                    board[i] = 0
+                    if score > best_score:
+                        best_score = score
+                        move = i
 
-            if board[clicked_row][clicked_col] == '':
-                board[clicked_row][clicked_col] = current_player
+            board[move] = -1
+            user_turn = True
 
-                # 차례 변경
-                if current_player == 'X':
-                    current_player = 'O'
-                else:
-                    current_player = 'X'
+    draw_board()
+    win_status = check_win()
+    if win_status != 0:
+        game_end = True
+        s = pygame.Surface((tile_size * 3, tile_size - 40))
+        s.set_alpha(80)
+        s.fill((0,0,0))
+        screen.blit(s, (0, title_height + tile_size + 20,))
+        if win_status == 1:
+            message = "you win!"
+        elif win_status == -1:
+            message = "you lose..."
+        else:
+            message = "draw"
 
-    # 화면 초기화
-    screen.fill(WHITE)
-
-    # 가로 선 그리기
-    for i in range(1, 3):
-        pygame.draw.line(screen, LINE_COLOR, (0, i * height // 3), (width, i * height // 3), 5)
-
-    # 세로 선 그리기
-    for i in range(1, 3):
-        pygame.draw.line(screen, LINE_COLOR, (i * width // 3, 0), (i * width // 3, height), 5)
-
-    # 현재 게임 보드 상태 그리기
-    font = pygame.font.Font(None, 100)
-    for row in range(3):
-        for col in range(3):
-            cell_value = board[row][col]
-            if cell_value != '':
-                if cell_value=='O':
-                    text = font.render(cell_value, True, BLUE)
-                    text_rect = text.get_rect(center=(col * width // 3 + width // 6, row * height // 3 + height // 6))
-                    screen.blit(text, text_rect)
-                else:
-                    text = font.render(cell_value, True, RED)
-                    text_rect = text.get_rect(center=(col * width // 3 + width // 6, row * height // 3 + height // 6))
-                    screen.blit(text, text_rect)
-
-
-
-    # 화면 업데이트
+        pygame.display.flip()
+        turn = font100.render(message, True, (255, 255, 255))
+        screen.blit(turn, (tile_size * 3 // 2 - turn.get_width() // 2, (title_height+tile_size*3+50)//2))
+        pygame.display.flip()
+        pygame.time.wait(1000)
+        if win_status == 1:
+            win_count += 1
+        elif win_status == -1:
+            lose_count += 1
+        elif win_status == 999:
+            draw_count += 1
+        board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        first_turn = not first_turn  # 게임이 끝날 때마다 턴 변경
+        user_turn = first_turn
+        if not user_turn:  # 봇의 차례일 때 봇이 말을 놓음
+            pygame.time.set_timer(BOT_PLAY, bot_delay)
+        game_end = False
     pygame.display.flip()
+
+pygame.quit()
