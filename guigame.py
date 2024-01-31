@@ -13,6 +13,7 @@ window.geometry("800x530+100+100")
 # 화면 크기 조절 불가
 window.resizable(False, False)
 
+# TODO : entry 에 String var 사용하기
 # 1에서 100사이
 # 수학적으로 접근했을땐 6에서 7사이
 random_number = random.randint(1, 100)
@@ -23,6 +24,8 @@ font20 = tkinter.font.Font(family="consolas", size=20)
 font25 = tkinter.font.Font(family="consolas", size=25)
 font25bold = tkinter.font.Font(family="consolas", size=25).config(weight="bold")
 font30 = tkinter.font.Font(family="consolas", size=30)
+font30bold = tkinter.font.Font(family="consolas",size=30)
+font30bold.config(weight="bold")
 font50 = tkinter.font.Font(family="consolas", size=50)
 font50.config(weight="bold")
 font15bold = font30.config(weight='bold')
@@ -33,7 +36,7 @@ game_title_label.pack()
 try_count_label = tkinter.Label(window, text=f'try count : {count}', font=font20, pady=20)
 try_count_label.pack()
 
-state_label = tkinter.Label(window, text="", font=font25)
+state_label = tkinter.Label(window, text="", font=font30bold)
 state_label.pack()
 
 rank_label = tkinter.Label(window, text='', font=font25)
@@ -41,9 +44,11 @@ rank_label.pack()
 rank_label.pack_forget()
 
 title_label = tkinter.Label(window, text="please enter a number between 1 and 100", font=font15)
-title_label.pack()
-entry = tkinter.Entry(window, width=40, font=font20)
-entry.pack(pady=20)
+title_label.pack(pady=5)
+def on_validate(char, entry_value):
+    return len(entry_value) <= 3
+entry = tkinter.Entry(window, width=12,validate="key", font=font20,validatecommand=(window.register(on_validate),"%S","%P"))
+entry.pack(pady=18)
 try_again_message = tkinter.Label(window, text="can you try again?", font=font20)
 
 
@@ -58,20 +63,20 @@ def on_click_retry_button():
     print(random_number)
     try_again_button.pack_forget()
     close_button.pack_forget()
-    title_label.pack()
+    title_label.pack(pady=5)
     title_label.config(text="please enter a number between 1 and 100")
+    entry.pack_forget()
+    entry.pack(pady=18)
     try_again_message.pack_forget()
-    try_count_label.config(text=f'try count : {count}', font=font25)
+    try_count_label.config(text=f'try count : {count}', font=font20)
     state_label.config(text="", font=font20)
-    rank_label.pack_forget()
-
+    # rank_label.pack_forget()
     entry.delete(0, "end")
-    rank_label.config(text="")
+    # rank_label.config(text="")
     button.pack()
-    entry.config(text="")
 
 
-try_again_button = tkinter.Button(window, text="retry", command=on_click_retry_button, font=font20)
+try_again_button = tkinter.Button(window, text="retry", command=on_click_retry_button, font=font20,bg="#19D219",padx=25,fg="white")
 close_button = tkinter.Button(window, text="close", command=on_close_button_click, font=font20)
 
 
@@ -102,15 +107,18 @@ def on_click_button():
     global entry, state_label, random_number, count, try_again_message
     try:
         get_entry = int(entry.get())
+        entry.delete(0, "end")
         if get_entry < 0 or get_entry > 100:
             state_label.config(text="The value must be between 1 and 100.", font=font20, fg='red')
             return
         count -= 1
-        if count < 0:
-            state_label.config(text='game over')
+        if count < 1:
+            state_label.config(text='game over',fg='#FF0000',font=font30bold)
+            title_label.pack_forget()
             button.pack_forget()
+            entry.pack_forget()
             try_count_label.config(text=f'try count : 0', font=font20)
-            try_again_message.pack()
+            try_again_message.pack(pady=10)
             try_again_button.pack()
             return
         try_count_label.config(text=f'try count : {count}', font=font20)
@@ -137,18 +145,19 @@ def on_click_button():
             else:
                 rank = "F"
             print(rank, )
-            rank_label.config(text=f"your rank :{rank}", fg=color, )
-            rank_label.pack()
-
-            state_label.config(text='Congratulations!', font=font25bold, fg='black')
+            # rank_label.config(text=f"your rank :{rank}", fg=color, )
+            # rank_label.pack()
+            entry.pack_forget()
+            title_label.pack_forget()
+            state_label.config(text='Congratulations!', fg='black',font=font30bold)
             button.pack_forget()
             title_label.config(text="")
-            try_again_message.pack()
+            try_again_message.pack(pady=10)
             try_again_button.pack()
         elif get_entry < random_number:
-            state_label.config(text='Up!!', fg='green', font=font25bold)
+            state_label.config(text='Up!!', fg='green', font=font30bold)
         else:
-            state_label.config(text='Down!!', fg='red', font=font25bold)
+            state_label.config(text='Down!!', fg='red', font=font30bold)
 
     except ValueError as e:
         if not entry.get() == "":
@@ -158,7 +167,7 @@ def on_click_button():
         print(e)
 
 
-button = tkinter.Button(window, text='confirm!', overrelief="raised", pady=5, bg="#1976D2", fg="white", font=font20,
+button = tkinter.Button(window, text='Go!', overrelief="raised", pady=5,padx=30, bg="#1976D2", fg="white", font=font20,
                         command=on_click_button)
 button.pack()
 

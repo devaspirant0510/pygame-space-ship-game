@@ -13,11 +13,11 @@ title_height = 120
 footer_height = 130
 bot_delay = random.randint(700, 1000)  # 봇이 말을 놓는 딜레이 시간 (밀리초)
 tile_size = 200
-image_o = pygame.image.load("../img/o.png")
-image_o = pygame.transform.scale(image_o, (tile_size * 0.87, tile_size * 0.83))
+image_o = pygame.image.load("img/crossed.png")
+image_o = pygame.transform.scale(image_o, (tile_size, tile_size))
 
-image_x = pygame.image.load("../img/crossed.png")
-image_x = pygame.transform.scale(image_x, (tile_size, tile_size))
+image_x = pygame.image.load("img/o.png")
+image_x = pygame.transform.scale(image_x, (tile_size * 0.87, tile_size * 0.83))
 
 # 파이게임 초기화
 pygame.init()
@@ -84,18 +84,18 @@ def minimax(board, depth, is_maximizing):
 def draw_board():
     screen.fill((255, 255, 255))  # 화면을 흰색으로 채우기
     # 상단의 승/패 표시 텍스트
-    player_info = font.render("player", True, (0, 0, 0))
-    player_count = font100.render(f"{win_count}", True, (0, 0, 0))
+    player_info = font.render("win", True, (255, 0, 0))
+    player_count = font100.render(f"{win_count}", True, (255, 0, 0))
     screen.blit(player_info, (tile_size // 2 - player_info.get_width() // 2, 5 + title_height + tile_size * 3))
     screen.blit(player_count, (
         tile_size // 2 - player_count.get_width() // 2, title_height + tile_size * 3 + 30))
-    draw_info = font.render("draw", True, (0, 0, 0))
-    tie_count = font100.render(f"{draw_count}", True, (0, 0, 0))
-    screen.blit(draw_info, (tile_size + tile_size // 2 - draw_info.get_width() // 2, 5 + title_height + tile_size * 3))
-    screen.blit(tie_count, (tile_size + tile_size // 2 - tie_count.get_width() // 2,
-                            title_height + tile_size * 3 + 30))
-    com_info = font.render("com", True, (0, 0, 0))
-    com_win_count = font100.render(f"{lose_count}", True, (0, 0, 0))
+    # draw_info = font.render("draw", True, (0, 0, 0))
+    # tie_count = font100.render(f"{draw_count}", True, (0, 0, 0))
+    # screen.blit(draw_info, (tile_size + tile_size // 2 - draw_info.get_width() // 2, 5 + title_height + tile_size * 3))
+    # screen.blit(tie_count, (tile_size + tile_size // 2 - tie_count.get_width() // 2,
+    #                         title_height + tile_size * 3 + 30))
+    com_info = font.render("lose", True, (0, 0, 255))
+    com_win_count = font100.render(f"{lose_count}", True, (0, 0, 255))
     screen.blit(com_info,
                 (tile_size * 2 + tile_size // 2 - com_info.get_width() // 2, 5 + title_height + tile_size * 3))
     screen.blit(com_win_count,
@@ -110,7 +110,7 @@ def draw_board():
                                                   (is_player_turn.get_height(), is_player_turn.get_height()))
 
     else:
-        is_player_turn = font.render("com Turn", True, (30, 30, 30))
+        is_player_turn = font.render("computer Turn", True, (30, 30, 30))
         resize_turn_icon = pygame.transform.scale(image_o,
                                                   (is_player_turn.get_height(), is_player_turn.get_height()))
 
@@ -132,7 +132,8 @@ def draw_board():
                              border_radius=3)
             if board[i * 3 + j] != 0:
                 if board[i * 3 + j] == 1:
-                    screen.blit(image_x, (j * tile_size, i * tile_size + title_height))
+                    screen.blit(image_x, (j * tile_size + ((tile_size - image_x.get_width()) // 2),
+                                          (i * tile_size + ((tile_size - image_x.get_height()) // 2)) + title_height))
                 else:
                     screen.blit(image_o, (j * tile_size + ((tile_size - image_o.get_width()) // 2),
                                           (i * tile_size + ((tile_size - image_o.get_height()) // 2)) + title_height))
@@ -188,7 +189,7 @@ while game_running:
         game_end = True
         s = pygame.Surface((tile_size * 3, tile_size - 40))
         s.set_alpha(80)
-        s.fill((0,0,0))
+        s.fill((0, 0, 0))
         screen.blit(s, (0, title_height + tile_size + 20,))
         if win_status == 1:
             message = "you win!"
@@ -199,7 +200,7 @@ while game_running:
 
         pygame.display.flip()
         turn = font100.render(message, True, (255, 255, 255))
-        screen.blit(turn, (tile_size * 3 // 2 - turn.get_width() // 2, (title_height+tile_size*3+50)//2))
+        screen.blit(turn, (tile_size * 3 // 2 - turn.get_width() // 2, (title_height + tile_size * 3 + 50) // 2))
         pygame.display.flip()
         pygame.time.wait(1000)
         if win_status == 1:
