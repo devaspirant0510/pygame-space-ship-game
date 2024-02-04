@@ -138,7 +138,7 @@ image_ball_effect = pygame.image.load("img/ballMotion.png")
 
 ball_x = SCREEN_WIDTH // 2
 ball_y = SCREEN_HEIGHT // 2
-ball_speed = 8
+ball_speed = 10
 ball_speed_x = random.choice([-ball_speed, ball_speed])  # 랜덤으로 왼쪽 또는 오른쪽으로 시작
 ball_speed_y = random.choice([-ball_speed, ball_speed])  # 랜덤으로 왼쪽 또는 오른쪽으로 시작
 image_ball_rect = image_ball.get_rect()

@@ -5,6 +5,7 @@ import random
 import math
 
 
+# 화면 상태값
 class ScreenState(Enum):
     game_start = auto()
     game_main = auto()
@@ -12,8 +13,10 @@ class ScreenState(Enum):
     game_how_to_play = auto()
 
 
+# 화면 크기
 SCREEN_HEIGHT, SCREEN_WIDTH = 800, 800
 
+# 색상 값
 COLOR_SKY_BLUE = (0, 128, 128)
 COLOR_DARK_BLUE = (0, 64, 64)
 
@@ -31,10 +34,10 @@ def draw_button(surface, rect, message):
 
 
 button_size = 400
-button_full_size = SCREEN_WIDTH-100
+button_full_size = SCREEN_WIDTH - 100
 start_button = pygame.Rect(SCREEN_WIDTH // 2 - button_size // 2, 400, button_size, 60)
 how_to_button = pygame.Rect(SCREEN_WIDTH // 2 - button_size // 2, 400 + 60 + 20, button_size, 60)
-back_button = pygame.Rect(SCREEN_WIDTH//2-button_full_size // 2, SCREEN_HEIGHT-80,button_full_size,60)
+back_button = pygame.Rect(SCREEN_WIDTH // 2 - button_full_size // 2, SCREEN_HEIGHT - 80, button_full_size, 60)
 
 clock = pygame.time.Clock()
 # fps
@@ -93,7 +96,7 @@ state_game_level = 1
 # 일반 적 레이턴시 감소
 state_game_level_list = [4, 18, 22, 36, 40]
 # 일반 적
-enemy_size = 30
+enemy_size = 6.5
 enemy_speed = 1.5
 enemies = []
 enemies_rect = []
@@ -116,8 +119,8 @@ is_show_hard_enemy = False
 
 
 def draw_enemy(x, y):
-    radius = 15
-    pygame.draw.circle(screen, (255, 165, 0), [x, y], 15)
+    radius = 5
+    pygame.draw.circle(screen, (255, 165, 0), [x, y], radius)
     rect = pygame.Rect(x - radius, y - radius, radius * 2, radius * 2)
     enemies_rect.append(rect)
 
@@ -125,17 +128,17 @@ def draw_enemy(x, y):
 def spawn_hard_enemy():
     side = random.choice(["top", "bottom", "left", "right"])
     if side == "top":
-        enemy_x = random.randint(0, SCREEN_WIDTH - enemy_size)
+        enemy_x = random.randint(0, SCREEN_WIDTH)
         enemy_y = 0
     elif side == "bottom":
-        enemy_x = random.randint(0, SCREEN_WIDTH - enemy_size)
+        enemy_x = random.randint(0, SCREEN_WIDTH)
         enemy_y = SCREEN_HEIGHT - enemy_size
     elif side == "left":
         enemy_x = 0
-        enemy_y = random.randint(0, SCREEN_HEIGHT - enemy_size)
+        enemy_y = random.randint(0, SCREEN_HEIGHT)
     elif side == "right":
         enemy_x = SCREEN_WIDTH - enemy_size
-        enemy_y = random.randint(0, SCREEN_HEIGHT - enemy_size)
+        enemy_y = random.randint(0, SCREEN_HEIGHT)
 
     # 적의 초기 방향 설정
 
@@ -144,7 +147,7 @@ def spawn_hard_enemy():
     length = math.sqrt(player_direction[0] ** 2 + player_direction[1] ** 2)
     enemy_direction = [player_direction[0] / length, player_direction[1] / length]
     enemy_surface = pygame.Surface((30, 30), pygame.SRCALPHA)
-    pygame.draw.circle(enemy_surface, (255, 50, 50), (15, 15), 15)
+    pygame.draw.circle(enemy_surface, (255, 50, 50), (15, 15), enemy_size)
     hard_enemies.append([enemy_x, enemy_y, enemy_direction, enemy_surface])
 
 
@@ -152,17 +155,17 @@ def spawn_hard_enemy():
 def spawn_enemy():
     side = random.choice(["top", "bottom", "left", "right"])
     if side == "top":
-        enemy_x = random.randint(0, SCREEN_WIDTH - enemy_size)
+        enemy_x = random.randint(0, SCREEN_WIDTH)
         enemy_y = 0
     elif side == "bottom":
-        enemy_x = random.randint(0, SCREEN_WIDTH - enemy_size)
+        enemy_x = random.randint(0, SCREEN_WIDTH)
         enemy_y = SCREEN_HEIGHT - enemy_size
     elif side == "left":
         enemy_x = 0
-        enemy_y = random.randint(0, SCREEN_HEIGHT - enemy_size)
+        enemy_y = random.randint(0, SCREEN_HEIGHT)
     elif side == "right":
         enemy_x = SCREEN_WIDTH - enemy_size
-        enemy_y = random.randint(0, SCREEN_HEIGHT - enemy_size)
+        enemy_y = random.randint(0, SCREEN_HEIGHT)
 
     # 적의 초기 방향 설정
 
@@ -171,14 +174,17 @@ def spawn_enemy():
     length = math.sqrt(player_direction[0] ** 2 + player_direction[1] ** 2)
     enemy_direction = [player_direction[0] / length, player_direction[1] / length]
     enemy_surface = pygame.Surface((30, 30), pygame.SRCALPHA)
-    pygame.draw.circle(enemy_surface, (255, 165, 0), (15, 15), 15)
+    pygame.draw.circle(enemy_surface, (255, 165, 0), (15, 15), enemy_size)
     enemies.append([enemy_x, enemy_y, enemy_direction, enemy_surface])
 
 
 def state_start_game_event(e):
-    global state
+    global state, key_check
+    if e.type == pygame.KEYUP:
+        key_check = False
     if e.type == pygame.KEYDOWN:
         state = ScreenState.game_main
+        key_check = True
     if e.type == pygame.MOUSEBUTTONDOWN:
         print(e.pos)
         if how_to_button.collidepoint(e.pos):
@@ -189,9 +195,15 @@ def state_main_game_event(e):
     pass
 
 
+key_check = True
+
+
 def state_retry_game_event(e):
-    global hard_enemy_size, last_hard_spawn_time, hard_spawn_interval, is_show_hard_enemy, hard_enemy_speed, hard_enemies, state, me_stop_rect, me_speed, state_game_time, state_game_level, enemy_speed, enemies, last_spawn_time, last_game_time, spawn_interval
-    if e.type == pygame.KEYDOWN:
+    global key_check, hard_enemy_size, last_hard_spawn_time, hard_spawn_interval, is_show_hard_enemy, hard_enemy_speed, hard_enemies, state, me_stop_rect, me_speed, state_game_time, state_game_level, enemy_speed, enemies, last_spawn_time, last_game_time, spawn_interval
+    if e.type == pygame.KEYUP:
+        if key_check:
+            key_check = False
+    if e.type == pygame.KEYDOWN and not key_check:
         pygame.mixer.music.play(-1)
         state = ScreenState.game_main
         me_stop_rect.x = SCREEN_WIDTH // 2 - me_stop_rect.width
@@ -237,13 +249,15 @@ def draw_retry_screen():
     title = font100.render("게임 오버", True, (255, 255, 255))
     screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 130))
     any_key_subscription = font30.render("다시 시작하려면 아무 키나 눌러주세요", True, (255, 255, 255))
-    screen.blit(any_key_subscription, (SCREEN_WIDTH // 2 - any_key_subscription.get_width() // 2+20, 130+title.get_height()+20))
+    screen.blit(any_key_subscription,
+                (SCREEN_WIDTH // 2 - any_key_subscription.get_width() // 2 + 20, 130 + title.get_height() + 20))
     sub_title = font25.render("점수", True, (255, 255, 255))
     screen.blit(sub_title,
                 (SCREEN_WIDTH // 2 - sub_title.get_width() // 2, SCREEN_HEIGHT // 2 - sub_title.get_height()))
-    score = font100.render(f"{state_game_time}",False,(255,255,255))
+    score = font100.render(f"{state_game_time}", False, (255, 255, 255))
     screen.blit(score,
-                (SCREEN_WIDTH // 2 - score.get_width() // 2, SCREEN_HEIGHT // 2 - sub_title.get_height()+sub_title.get_height()+20))
+                (SCREEN_WIDTH // 2 - score.get_width() // 2,
+                 SCREEN_HEIGHT // 2 - sub_title.get_height() + sub_title.get_height() + 20))
 
 
 def convert_time(time):
@@ -271,22 +285,24 @@ def draw_how_to_play_screen():
     header = font100.render("게임 방법", True, (255, 255, 255))
     screen.blit(header, (SCREEN_WIDTH // 2 - header.get_width() // 2, 30))
     me_image = me[0]
-    me_image = pygame.transform.scale(me_image, (60,60))
-    screen.blit(me_image,(50,60+header.get_height()))
-    me_desc1 = font25.render("플레이어의 캐릭터입니다. 방향키로 움직일 수 있고",True,(255, 255, 255))
-    me_desc2 = font25.render("총알과 닿았을 때 게임이 종료 됩니다.",True,(255, 255, 255))
-    screen.blit(me_desc1, (50+me_image.get_width()+50,60+header.get_height()))
-    screen.blit(me_desc2,(50+me_image.get_width()+50,60+header.get_height()+me_desc2.get_height()))
-    pygame.draw.circle(screen,(255,165,0),(50+30,60+header.get_height()+me_desc2.get_height()+40+50),30)
-    enemy_desc1 = font25.render("기본 총알 : 총알과 닿으면 게임이 종료 됩니다.",True,(255, 255, 255))
-    screen.blit(enemy_desc1,(50+30+50+25,60+header.get_height()+me_desc2.get_height()+40+30))
-    pygame.draw.circle(screen,(255,50,0),(50+30,60+header.get_height()+me_desc2.get_height()+40+50+75+20),30)
-    hard_enemy_desc1 = font25.render("특수 총알 : 총알과 닿으면 게임이 종료 됩니다.",True,(255, 255, 255))
-    hard_enemy_desc2 = font25.render("해당 총알은 벽에 닿아도 튕겨서 다시 돌아옵니다.",True,(255, 255, 255))
-    screen.blit(hard_enemy_desc1,(50+30+50+25,60+header.get_height()+me_desc2.get_height()+40+110))
-    screen.blit(hard_enemy_desc2,(50+30+50+25,60+header.get_height()+me_desc2.get_height()+40+110+hard_enemy_desc1.get_height()))
-    draw_button(screen,back_button,"돌아가기")
-    #255,50,50
+    me_image = pygame.transform.scale(me_image, (60, 60))
+    screen.blit(me_image, (50, 60 + header.get_height()))
+    me_desc1 = font25.render("플레이어의 캐릭터입니다. 방향키로 움직일 수 있고", True, (255, 255, 255))
+    me_desc2 = font25.render("총알과 닿았을 때 게임이 종료 됩니다.", True, (255, 255, 255))
+    screen.blit(me_desc1, (50 + me_image.get_width() + 50, 60 + header.get_height()))
+    screen.blit(me_desc2, (50 + me_image.get_width() + 50, 60 + header.get_height() + me_desc2.get_height()))
+    pygame.draw.circle(screen, (255, 165, 0), (50 + 30, 60 + header.get_height() + me_desc2.get_height() + 40 + 50), 30)
+    enemy_desc1 = font25.render("기본 총알 : 총알과 닿으면 게임이 종료 됩니다.", True, (255, 255, 255))
+    screen.blit(enemy_desc1, (50 + 30 + 50 + 25, 60 + header.get_height() + me_desc2.get_height() + 40 + 30))
+    pygame.draw.circle(screen, (255, 50, 0),
+                       (50 + 30, 60 + header.get_height() + me_desc2.get_height() + 40 + 50 + 75 + 20), 30)
+    hard_enemy_desc1 = font25.render("특수 총알 : 총알과 닿으면 게임이 종료 됩니다.", True, (255, 255, 255))
+    hard_enemy_desc2 = font25.render("해당 총알은 벽에 닿아도 튕겨서 다시 돌아옵니다.", True, (255, 255, 255))
+    screen.blit(hard_enemy_desc1, (50 + 30 + 50 + 25, 60 + header.get_height() + me_desc2.get_height() + 40 + 110))
+    screen.blit(hard_enemy_desc2, (
+    50 + 30 + 50 + 25, 60 + header.get_height() + me_desc2.get_height() + 40 + 110 + hard_enemy_desc1.get_height()))
+    draw_button(screen, back_button, "돌아가기")
+    # 255,50,50
 
 
 def draw_main_screen():
@@ -318,17 +334,20 @@ def draw_main_screen():
                 print("level5")
                 state_game_level = 5
                 hard_enemy_speed += 0.8
-                hard_spawn_interval = 4000
+                hard_spawn_interval = 2000
                 state_game_time += 1
             elif i == state_game_level_list[4]:
                 print("level6")
                 state_game_level = 6
                 state_game_time += 1
 
-    font_game_level = font30.render(f"레벨 {state_game_level}", True, (255, 255, 255), )
-    screen.blit(font_game_level, (8, 2))
-    font_game_time = font30.render(f"{convert_time(state_game_time)}", True, (255, 255, 255), )
-    screen.blit(font_game_time, (SCREEN_WIDTH - font_game_time.get_width()-8, 2))
+    font_game_level = font20.render("점수", True, (255, 255, 255), )
+
+    font_game_time = font25.render(f"{state_game_time}", True, (255, 255, 255), )
+    screen.blit(font_game_level,
+                (SCREEN_WIDTH // 2 - (font_game_time.get_width() + font_game_level.get_width()) // 2, 4))
+    screen.blit(font_game_time,
+                (SCREEN_WIDTH // 2 - (font_game_time.get_width()) // 2 + font_game_level.get_width() // 2 + 5, 0))
 
     # pygame.draw.circle(screen, me_color, me_rect.center, me_radius)
     current_game_time = pygame.time.get_ticks()
@@ -398,10 +417,10 @@ def draw_main_screen():
         if current_image == me[0]:
             offset = (hard_enemy[0] - me_stop_rect.x, hard_enemy[1] - me_stop_rect.y)
             if me_mask_stop.overlap(rect_mask, offset):
-                pygame.time.wait(500)
+                # pygame.time.wait(100)
                 state = ScreenState.game_retry
                 game_over_audio.play()
-
+                pygame.display.flip()
         elif current_image == me[1]:
             offset = (hard_enemy[0] - me_move_rect.x, hard_enemy[1] - me_move_rect.y)
             if me_mask_move.overlap(rect_mask, offset):
@@ -434,12 +453,15 @@ def draw_main_screen():
 
     for hare_enemy in hard_enemies:
         screen.blit(hare_enemy[3], (hare_enemy[0], hare_enemy[1]))
+
+
 def state_how_to_play_event(e):
     global state
     if e.type == pygame.MOUSEBUTTONDOWN:
         print(e.pos)
         if back_button.collidepoint(e.pos):
             state = ScreenState.game_start
+
 
 is_running = True
 state = ScreenState.game_start
@@ -452,7 +474,7 @@ while is_running:
         # 시작화면 이벤트 처리
         if state == ScreenState.game_start:
             state_start_game_event(event)
-        elif state==ScreenState.game_how_to_play:
+        elif state == ScreenState.game_how_to_play:
             state_how_to_play_event(event)
 
         # 메인화면 이벤트 처리
